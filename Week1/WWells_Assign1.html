@@ -184,9 +184,58 @@ rad *<span class="st"> </span><span class="dv">180</span>/pi</code></pre></div>
 <h1>Problem 2</h1>
 <p>Set up a system of equations with 3 variables and 3 constraints and solve for x. Please write a function in R that will take two variables (matrix A &amp; constraint vector b) and solve using elimination. Your function should produce the right answer for the system of equations for any 3-variable, 3-equation system. You don’t have to worry about degenerate cases and can safely assume that the function will only be tested with a system of equations that has a solution. Please note that you do have to worry about zero pivots, though. Please note that you should not use the built-in function solve to solve this system or use matrix inverses. The approach that you should employ is to construct an Upper Triangular Matrix and then back-substitute to get the solution. Alternatively, you can augment the matrix A with vector b and jointly apply the Gauss Jordan elimination procedure.</p>
 <p>Please test it with the system below and it should produce a solution x = [−1.55, −0.32, 0.95]</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># test matrices</span>
-A &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">3</span>,<span class="dv">2</span>,-<span class="dv">1</span>,<span class="dv">5</span>,-<span class="dv">1</span>,-<span class="dv">2</span>,<span class="dv">4</span>), <span class="dv">3</span>, <span class="dt">byrow=</span>T)
+<div id="test-matrices" class="section level2">
+<h2>Test Matrices</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">A &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">3</span>,<span class="dv">2</span>,-<span class="dv">1</span>,<span class="dv">5</span>,-<span class="dv">1</span>,-<span class="dv">2</span>,<span class="dv">4</span>), <span class="dv">3</span>, <span class="dt">byrow=</span>T)
 b &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">6</span>))</code></pre></div>
+</div>
+<div id="helper-functions" class="section level2">
+<h2>Helper Functions</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Create augmented matrix</span>
+combine &lt;-<span class="st"> </span>function(A,b){
+    Aug &lt;-<span class="st"> </span><span class="kw">cbind</span>(A,b)
+}
+
+<span class="co"># Create upper triangle matrix</span>
+<span class="co"># Note - doesn't handle rows with 0 pivots</span>
+triangle &lt;-<span class="st"> </span>function(Aug){
+    for (i in <span class="dv">2</span>:<span class="kw">nrow</span>(Aug)){
+        for(j in <span class="dv">1</span>:(i -<span class="st"> </span><span class="dv">1</span>)){
+            Aug[i,] &lt;-<span class="st">  </span>Aug[i,] -<span class="st"> </span>(Aug[j,] *<span class="st"> </span>(Aug[i, j]/Aug[j, j])) 
+        }
+    }
+    Aug
+}
+
+<span class="co"># Backsolve upper triangle matrix, return vector x</span>
+backsolve &lt;-<span class="st"> </span>function(Uc){
+  x &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="ot">NA</span>*<span class="dv">3</span>)
+  x[<span class="dv">3</span>] &lt;-<span class="st"> </span>Uc[<span class="dv">3</span>,<span class="dv">4</span>] /<span class="st"> </span>Uc[<span class="dv">3</span>,<span class="dv">3</span>]
+  x[<span class="dv">2</span>] &lt;-<span class="st"> </span>(Uc[<span class="dv">2</span>,<span class="dv">4</span>] -<span class="st"> </span>Uc[<span class="dv">2</span>,<span class="dv">3</span>] *<span class="st"> </span>x [<span class="dv">3</span>]) /<span class="st"> </span>Uc[<span class="dv">2</span>,<span class="dv">2</span>]
+  x[<span class="dv">1</span>] &lt;-<span class="st"> </span>(Uc[<span class="dv">1</span>,<span class="dv">4</span>] -<span class="st"> </span>Uc[<span class="dv">1</span>,<span class="dv">2</span>] *<span class="st"> </span>x[<span class="dv">2</span>] -<span class="st"> </span>Uc[<span class="dv">1</span>,<span class="dv">3</span>] *<span class="st"> </span>x[<span class="dv">3</span>]) /<span class="st"> </span>Uc[<span class="dv">1</span>,<span class="dv">1</span>]
+  x &lt;-<span class="st"> </span><span class="kw">round</span>(x, <span class="dv">2</span>)
+  x
+}</code></pre></div>
+</div>
+<div id="function-to-solve" class="section level2">
+<h2>Function to Solve</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#function to call all helpers, produce x that solves Ax = b for 3*3 matrix w/ no zero pivots</span>
+solve3by3nozeropivot &lt;-<span class="st"> </span>function(A,b){
+    Ab &lt;-<span class="st"> </span><span class="kw">combine</span>(A,b)
+    Uc &lt;-<span class="st"> </span><span class="kw">triangle</span>(Ab)
+    x &lt;-<span class="st"> </span><span class="kw">backsolve</span>(Uc)
+    x
+}
+<span class="kw">solve3by3nozeropivot</span>(A,b)</code></pre></div>
+<pre><code>## [1] -1.55 -0.32  0.95</code></pre>
+</div>
+<div id="double-check" class="section level2">
+<h2>Double Check</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">A &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">c</span>(<span class="dv">2</span>,<span class="dv">4</span>,-<span class="dv">2</span>,<span class="dv">4</span>,<span class="dv">9</span>,-<span class="dv">3</span>,-<span class="dv">2</span>,-<span class="dv">3</span>,<span class="dv">7</span>), <span class="dv">3</span>, <span class="dt">byrow=</span>T)
+b &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">c</span>(<span class="dv">2</span>,<span class="dv">8</span>,<span class="dv">10</span>))
+<span class="kw">solve3by3nozeropivot</span>(A,b)</code></pre></div>
+<pre><code>## [1] -1  2  2</code></pre>
+</div>
 </div>
 
 
