@@ -10,14 +10,28 @@ output:
 ---
 # Problem 1
 
-1. Show that $A^T A \neq AA^T$ in general. (Proof and demonstration.)
-2. For a special type of square matrix A, we get $A^T A \neq AA^T$ . Under what conditions could this be true? (Hint: The Identity matrix I is an example of such a matrix).
+__1. Show that $A^T A \neq AA^T$ in general. (Proof and demonstration.)__
 
-Please typeset your response using LaTeX mode in RStudio. 
+_Indirect Proof:_
+
+* Assume $A^T A = A A^T$
+* If A = $\begin{bmatrix} 2 & 2 \\3 & 4\end{bmatrix}$ then $A^T$ = $\begin{bmatrix} 2 & 3 \\2 & 4\end{bmatrix}$
+* $A^T A = \begin{bmatrix} 2 & 3 \\2 & 4\end{bmatrix}\begin{bmatrix} 2 & 2 \\3 & 4\end{bmatrix} = \begin{bmatrix} 13 & 16 \\16 & 20\end{bmatrix}$
+* but $A A^T = \begin{bmatrix} 2 & 2 \\3 & 4\end{bmatrix}\begin{bmatrix} 2 & 3 \\2 & 4\end{bmatrix} = \begin{bmatrix} 8 & 14 \\14 & 25\end{bmatrix}$
+* $\therefore$ we conclude that the original proposition is false and in general $A^T A \neq AA^T$
+
+__2. For a special type of square matrix A, we get $A^T A = AA^T$ . Under what conditions could this be true? (Hint: The Identity matrix I is an example of such a matrix).__
+
+The commutative law is usually broken when attempting to multiply a matrix by its transposition, but exceptions are made for symmetric matrices.   We can obtain a symmetric matrix by multiplying any $A$ by $A^T$ or $A^T$ by any $A$ to get $S$.  Then since $S^T = S$ there is no difference in the resulting dot product.
 
 ```{r}
+A <- matrix(rnorm(9), 3)
+S <- t(A) %*% A
+S %*% t(S)  
+t(S) %*% S
 
 ```
+
 
 # Problem 2
 
