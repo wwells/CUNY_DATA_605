@@ -1,0 +1,156 @@
+---
+title: "DATA 605: Fundamentals of Computational Mathematics"
+author: "Walt Wells, Spring 2017"
+subtitle: "Assignment 2"
+output:
+  html_document:
+    css: ../custom.css
+    highlight: zenburn
+    theme: lumen
+---
+# Problem 1
+
+__1. Show that $A^T A \neq AA^T$ in general. (Proof and demonstration.)__
+
+_Indirect Proof:_
+
+* Assume $A^T A = A A^T$
+* If A = $\begin{bmatrix} 2 & 2 \\3 & 4\end{bmatrix}$ then $A^T$ = $\begin{bmatrix} 2 & 3 \\2 & 4\end{bmatrix}$
+* $A^T A = \begin{bmatrix} 2 & 3 \\2 & 4\end{bmatrix}\begin{bmatrix} 2 & 2 \\3 & 4\end{bmatrix} = \begin{bmatrix} 13 & 16 \\16 & 20\end{bmatrix}$
+* but $A A^T = \begin{bmatrix} 2 & 2 \\3 & 4\end{bmatrix}\begin{bmatrix} 2 & 3 \\2 & 4\end{bmatrix} = \begin{bmatrix} 8 & 14 \\14 & 25\end{bmatrix}$
+* $\therefore$ we conclude that the original proposition is false and in general $A^T A \neq AA^T$
+
+__2. For a special type of square matrix A, we get $A^T A = AA^T$ . Under what conditions could this be true? (Hint: The Identity matrix I is an example of such a matrix).__
+
+The commutative law is usually broken when attempting to multiply a matrix by its transposition, but exceptions are made for symmetric matrices.   We can obtain a symmetric matrix by multiplying any $A$ by $A^T$ or $A^T$ by any $A$ to get $S$.  Then since $S^T = S$ there is no difference in the resulting dot product.
+
+```{r}
+A <- matrix(rnorm(9), 3)
+S <- t(A) %*% A
+S %*% t(S)  
+t(S) %*% S
+
+```
+
+
+# Problem 2
+
+Matrix factorization is a very important problem. There are supercomputers built just to do matrix factorizations. Every second you are on an airplane, matrices are being factorized. Radars that track flights use a technique called Kalman filtering. At the heart of Kalman Filtering is a Matrix Factorization operation. Kalman Filters are solving linear systems of equations when they track your flight using radars.
+
+Write an R function to factorize a square matrix A into LU or LDU, whichever you prefer. You don't have to worry about permuting rows of A and you can assume that A is less than 5x5, if you need to hard-code any variables in your code. 
+
+## Testing Matrices
+
+```{r}
+#from week2mod1
+A <- matrix(c(1,2,3,1,1,1,2,0,1),nrow=3)
+
+E21 <- matrix(c(1,-2,0,0,1,0,0,0,1),nrow=3)
+E31 <- matrix(c(1,0,-3,0,1,0,0,0,1),nrow=3)
+E32 <- matrix(c(1,0,0,0,1,-2,0,0,1),nrow=3)
+
+U <- E32 %*% E31 %*% E21 %*% A
+L <- solve(E21) %*% solve(E31) %*% solve(E32)
+```
+
+## Helper Functions
+
+```{r}
+# get dimensions of given matrix
+sizer <- function(matrix){
+    i <- nrow(matrix)
+    j <- ncol(matrix)
+    dim <- c(i,j)
+    dim
+}
+
+#set identity matrix given dim
+identity <- function(dim){
+    I <- diag(dim[1])
+    I
+}
+
+#test to confirm LU = A
+tester <- function(list, M){
+    print("L:")
+    print(list[[1]])
+    print("U:")
+    print(list[[2]])
+    print("LU:")
+    LU <- list[[1]] %*% list[[2]] 
+    print(LU)
+    print("A:")
+    print(M)
+}
+
+```
+
+## Function to Solve A = LU
+
+```{r}
+LowerUpper <- function(A, debug=FALSE){
+    
+    #get matrix dimensions
+    dim <- sizer(A)
+    
+    ## error handling for non-square submissions
+    if(dim[1]!=dim[2]) {
+        return("This is not a square matrix")
+    }
+    
+    ## initialize our L as an identity matrix to store successive E^-1
+    ## initialize our U as a copy of A
+    L <- identity(dim)
+    U <- A
+    
+    ## solve U based on E, store E^-1 in L
+    for (i in 2:dim[1]){
+        for(j in 1:(i - 1)){
+            # initialize a new E for each iteration
+            E <-  identity(dim)
+            # Find E based on state of U
+            E[i, j] <- -(U[i,j]/U[j,j])
+            
+            # update U using E
+            U <- E %*% U
+            # update L based on E^-1
+            L <- L %*% solve(E)
+            
+            ## debugger to check status of matrices at each pivot
+            if (debug==TRUE){
+                print(sprintf("E_%s%s:", i, j))
+                print(E)
+                print(sprintf("U_%s%s:", i, j))
+                print(U)            
+                print(sprintf("L_%s%s:", i, j))
+                print(L)
+            }
+        }
+    }
+    
+    return(list(L,U))
+}
+```
+
+## Function Calls / Test
+
+```{r}
+# from strang "intro to linear algebra" textbook
+b <- matrix(c(1,2,4,9), 2, byrow=T)
+t1 <- LowerUpper(b)
+tester(t1, b)
+
+t2 <- LowerUpper(A)
+tester(t2, A)
+
+pascal <- matrix(c(1,1,1,1,
+                   1,2,3,4,
+                   1,3,6,10,
+                   1,4,10,20), 4, byrow=T)
+t3 <- LowerUpper(pascal)
+tester(t3, pascal)
+
+d <- matrix(seq(1:6), 3, byrow=T)
+t6 <- LowerUpper(d)
+t6
+```
