@@ -1,0 +1,111 @@
+---
+title: "DATA 605: Fundamentals of Computational Mathematics"
+author: "Walt Wells, Spring 2017"
+subtitle: "Assignment 6"
+output:
+  html_document:
+    css: ../custom.css
+    highlight: zenburn
+    theme: lumen
+---
+# Problem 1
+
+### When you roll a fair die 3 times, how many possible outcomes are there?
+
+```{r}
+outcomes <- 6^3
+outcomes
+```
+
+### What is the probability of getting a sum total of 3 when you roll a die two times?
+
+```{r}
+# ways to get 3 in 2 rolls = (1,2) and (2,1)
+prob <- 2/(6^2)
+prob
+```
+
+### Assume a room of 25 strangers. What is the probability that two of them have the same birthday? Assume that all birthdays are equally likely and equal to 1=365 each. What happens to this probability when there are 50 people in the room?
+
+```{r}
+
+birthday <- function(n){
+    days <- 365
+    vals <- days - n
+    alldiff <- prod(365:(vals+1))/(365^n)
+    1 - alldiff
+}
+
+birthday(25)
+birthday(50)
+```
+
+# Problem 2
+
+Write a program to take a document in English and print out the estimated probabilities for each of the words that occur in that document. Your program should take in a file containing a large document and write out the probabilities of each of the words that appear in that document. Please remove all punctuation (quotes, commas, hyphens etc) and convert the words to lower case before you perform your calculations.
+
+Extend your program to calculate the probability of two words occurring adjacent to each other. It should take in a document, and two words (say the and for) and compute the probability of each of the words occurring in the document and the joint probability of both of them occurring together. The order of the two words is not important.
+
+Use the accompanying document for your testing purposes. Compare your probabilities of various words with the Time Magazine corpus: http://corpus.byu.edu/time/
+
+### Environment Prep
+```{r, warning=FALSE, message=FALSE}
+if (!require('stringr')) install.packages('stringr')
+if (!require('tm')) install.packages('tm')
+if (!require('RTextTools')) install.packages('RTextTools')
+if (!require('DT')) install.packages('DT')
+```
+
+
+### Function
+
+```{r, warning=FALSE, message=FALSE}
+wordprob <- function(docname, ngrams=1){
+    # read doc
+    tmp <- readLines(docname)
+    tmp <- str_c(tmp, collapse = " ")
+    
+    # clean corpus
+    corp <- Corpus(VectorSource(tmp))
+    corp <- tm_map(corp, content_transformer(tolower))
+    corp <- tm_map(corp, removeNumbers) 
+    corp <- tm_map(corp, removePunctuation)
+    corp <- tm_map(corp, stripWhitespace)
+    
+    # tokenize, term document matrix
+    xgramTokenizer <-function(x) unlist(lapply(ngrams(words(x), ngrams), paste, collapse = " "), use.names = FALSE)
+    tdm <- TermDocumentMatrix(corp, control = list(tokenize = xgramTokenizer)) 
+    
+    # create df
+    df <- sort(slam::row_sums(tdm), decreasing = TRUE)
+    df <- data.frame(word=names(df), freq=df)
+    
+    # incase ngram, get freq of one word for prob calc
+    tdmfreq <- TermDocumentMatrix(corp)
+    denom.df <- slam::row_sums(tdmfreq)
+    denom.df <- data.frame(word=names(denom.df), freq=denom.df)
+
+    # calc probability
+    df$probability <- round(df$freq / sum(denom.df$freq), 5)
+    rownames(df) <- NULL
+    
+    df
+}
+```
+
+### Calculate Probabilities
+```{r, warning=FALSE, message=FALSE}
+oneword <- wordprob('assign6.sample.txt')
+datatable(oneword)
+
+twowords <- wordprob('assign6.sample.txt', ngrams=2)
+datatable(twowords)
+```
+
+
+
+#### References:
+
+* https://github.com/wwells/CUNY_DATA_607/blob/master/Week10/DocClassification_Week10.Rmd
+* http://www.sthda.com/english/wiki/text-mining-and-word-cloud-fundamentals-in-r-5-simple-steps-you-should-know
+* http://rstudio-pubs-static.s3.amazonaws.com/39014_76f8487a8fb84ed7849e96846847c295.html
