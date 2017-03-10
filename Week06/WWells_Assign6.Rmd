@@ -32,7 +32,7 @@ prob
 birthday <- function(n){
     days <- 365
     vals <- days - n
-    alldiff <- prod(365:(vals+1))/(365^n)
+    alldiff <- prod(days:(vals+1))/(days^n)
     1 - alldiff
 }
 
