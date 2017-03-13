@@ -1,0 +1,47 @@
+---
+title: "DATA 605: Fundamentals of Computational Mathematics"
+author: "Walt Wells, Spring 2017"
+subtitle: "Assignment 7"
+output:
+  html_document:
+    css: ../custom.css
+    highlight: zenburn
+    theme: lumen
+---
+# Problem Set 1
+
+This week, you'll have only one programming assignment. Please write a function to compute the expected value and standard deviation of an array of values. Compare your results with that of R's mean and std functions. 
+
+Now, consider that instead of being able to neatly fit the values in memory in an array, you have an infinite stream of numbers coming by. How would you estimate the mean and standard deviation of such a stream? Your function should be able to return the current estimate of the mean and standard deviation at any time it is asked. Your program should maintain these current estimates and return them back at any invocation of these functions.
+
+(Hint: You can maintain a rolling estimate of the mean and standard deviation and allow these to slowly change over time as you see more and more new values).
+
+### Get Test Data
+
+```{r}
+auto <- read.table(url('https://raw.githubusercontent.com/wwells/CUNY_DATA_605/master/Week05/auto-mpg.data'))
+array <- auto[,1]
+```
+
+### In Memory
+
+```{r}
+getmean <- function(x) {
+    return(sum(x) / length(x))
+}
+
+inmem <- function(array) {
+    m <- getmean(array)
+    std <- sqrt(getmean((array-m)^2))
+    return(c(m, std))
+}
+
+inmem(array)
+c(mean(array), sd(array))
+```
+
+### Rolling
+
+```{r}
+
+```
