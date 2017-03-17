@@ -21,6 +21,7 @@ Now, consider that instead of being able to neatly fit the values in memory in a
 ```{r}
 auto <- read.table(url('https://raw.githubusercontent.com/wwells/CUNY_DATA_605/master/Week05/auto-mpg.data'))
 array <- auto[,1]
+sm_array <- array[1:10]
 ```
 
 ### In Memory
@@ -32,7 +33,7 @@ getmean <- function(x) {
 
 inmem <- function(array) {
     m <- getmean(array)
-    std <- sqrt(getmean((array-m)^2))
+    std <- sqrt(sum((array-m)^2) / (length(array)-1))
     return(c(m, std))
 }
 
@@ -42,6 +43,31 @@ c(mean(array), sd(array))
 
 ### Rolling
 
-```{r}
+For this we will use Welford's algorhythm.   It took me a while to figure out how to deal with this problem, and I confess, when I did, I simply used the general python code in the Wiki (adjusted to R).   
 
+Reference:  https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#On-line_algorithm
+
+```{r}
+welford <- function(infarray){
+    n <- 0
+    mean <- 0
+    M2 <- 0
+    for (i in infarray) {
+        n <- n+1
+        delta <- i - mean
+        mean <- mean + delta / n
+        delta2 <- i - mean
+        M2 <- M2 + delta * delta2
+        if(n < 2) {
+            sd <- 0
+        } else {
+            sd <- round(sqrt(M2 / (n-1)), 4)
+        }     
+        print(paste0('Count: ', n, ';  Mean: ', mean, ';  SD: ', sd))
+    }
+}
+
+welford(sm_array)
+#compare to: 
+c(mean(sm_array), sd(sm_array))
 ```

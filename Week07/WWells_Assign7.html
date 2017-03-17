@@ -161,7 +161,8 @@ $(document).ready(function () {
 <div id="get-test-data" class="section level3">
 <h3>Get Test Data</h3>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">auto &lt;-<span class="st"> </span><span class="kw">read.table</span>(<span class="kw">url</span>(<span class="st">'https://raw.githubusercontent.com/wwells/CUNY_DATA_605/master/Week05/auto-mpg.data'</span>))
-array &lt;-<span class="st"> </span>auto[,<span class="dv">1</span>]</code></pre></div>
+array &lt;-<span class="st"> </span>auto[,<span class="dv">1</span>]
+sm_array &lt;-<span class="st"> </span>array[<span class="dv">1</span>:<span class="dv">10</span>]</code></pre></div>
 </div>
 <div id="in-memory" class="section level3">
 <h3>In Memory</h3>
@@ -171,17 +172,52 @@ array &lt;-<span class="st"> </span>auto[,<span class="dv">1</span>]</code></pre
 
 inmem &lt;-<span class="st"> </span>function(array) {
     m &lt;-<span class="st"> </span><span class="kw">getmean</span>(array)
-    std &lt;-<span class="st"> </span><span class="kw">sqrt</span>(<span class="kw">getmean</span>((array-m)^<span class="dv">2</span>))
+    std &lt;-<span class="st"> </span><span class="kw">sqrt</span>(<span class="kw">sum</span>((array-m)^<span class="dv">2</span>) /<span class="st"> </span>(<span class="kw">length</span>(array)-<span class="dv">1</span>))
     <span class="kw">return</span>(<span class="kw">c</span>(m, std))
 }
 
 <span class="kw">inmem</span>(array)</code></pre></div>
-<pre><code>## [1] 194.4120 104.5104</code></pre>
+<pre><code>## [1] 194.412 104.644</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">c</span>(<span class="kw">mean</span>(array), <span class="kw">sd</span>(array))</code></pre></div>
 <pre><code>## [1] 194.412 104.644</code></pre>
 </div>
 <div id="rolling" class="section level3">
 <h3>Rolling</h3>
+<p>For this we will use Welford’s algorhythm. It took me a while to figure out how to deal with this problem, and I confess, when I did, I simply used the general python code in the Wiki (adjusted to R).</p>
+<p>Reference: <a href="https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#On-line_algorithm" class="uri">https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#On-line_algorithm</a></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">welford &lt;-<span class="st"> </span>function(infarray){
+    n &lt;-<span class="st"> </span><span class="dv">0</span>
+    mean &lt;-<span class="st"> </span><span class="dv">0</span>
+    M2 &lt;-<span class="st"> </span><span class="dv">0</span>
+    for (i in infarray) {
+        n &lt;-<span class="st"> </span>n<span class="dv">+1</span>
+        delta &lt;-<span class="st"> </span>i -<span class="st"> </span>mean
+        mean &lt;-<span class="st"> </span>mean +<span class="st"> </span>delta /<span class="st"> </span>n
+        delta2 &lt;-<span class="st"> </span>i -<span class="st"> </span>mean
+        M2 &lt;-<span class="st"> </span>M2 +<span class="st"> </span>delta *<span class="st"> </span>delta2
+        if(n &lt;<span class="st"> </span><span class="dv">2</span>) {
+            sd &lt;-<span class="st"> </span><span class="dv">0</span>
+        } else {
+            sd &lt;-<span class="st"> </span><span class="kw">round</span>(<span class="kw">sqrt</span>(M2 /<span class="st"> </span>(n<span class="dv">-1</span>)), <span class="dv">4</span>)
+        }     
+        <span class="kw">print</span>(<span class="kw">paste0</span>(<span class="st">'Count: '</span>, n, <span class="st">';  Mean: '</span>, mean, <span class="st">';  SD: '</span>, sd))
+    }
+}
+
+<span class="kw">welford</span>(sm_array)</code></pre></div>
+<pre><code>## [1] &quot;Count: 1;  Mean: 307;  SD: 0&quot;
+## [1] &quot;Count: 2;  Mean: 328.5;  SD: 30.4056&quot;
+## [1] &quot;Count: 3;  Mean: 325;  SD: 22.3383&quot;
+## [1] &quot;Count: 4;  Mean: 319.75;  SD: 21.0456&quot;
+## [1] &quot;Count: 5;  Mean: 316.2;  SD: 19.8796&quot;
+## [1] &quot;Count: 6;  Mean: 335;  SD: 49.364&quot;
+## [1] &quot;Count: 7;  Mean: 352;  SD: 63.6684&quot;
+## [1] &quot;Count: 8;  Mean: 363;  SD: 66.6526&quot;
+## [1] &quot;Count: 9;  Mean: 373.222222222222;  SD: 69.4816&quot;
+## [1] &quot;Count: 10;  Mean: 374.9;  SD: 65.7224&quot;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#compare to: </span>
+<span class="kw">c</span>(<span class="kw">mean</span>(sm_array), <span class="kw">sd</span>(sm_array))</code></pre></div>
+<pre><code>## [1] 374.9000  65.7224</code></pre>
 </div>
 </div>
 
