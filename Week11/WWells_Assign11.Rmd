@@ -12,7 +12,7 @@ output:
 
 Using R's lm function, perform regression analysis and measure the significance of the independent variables for the following two data sets.
 
-### Case 1 
+## Case 1 
 
 In the first case, you are evaluating the statement that we hear that Maximum Heart Rate of a person is related to their age by the following equation:
 
@@ -22,40 +22,127 @@ You have been given the following sample:
 ```{r}
 Age <- c(18, 23, 25, 35, 65, 54, 34, 56, 72, 19, 23, 42, 18, 39, 37)
 MaxHR <- c(202, 186, 187, 180, 156, 169, 174, 172, 153, 199, 193, 174, 198, 183, 178)
-df <- cbind(Age, MaxHR)
+df <- data.frame(Age, MaxHR)
 ```
 
 Perform a linear regression analysis fitting the Max Heart Rate to Age using the lm function in R. What is the resulting equation? Is the effect of Age on Max HR significant? What is the significance level? Please also plot the fitted relationship between Max HR and Age.
 
-### Case 2
+```{r}
+mod <- lm(MaxHR ~ Age, df)
+lm.mod <- summary(mod)
+p <- pf(lm.mod$fstatistic[1], lm.mod$fstatistic[2], lm.mod$fstatistic[3],
+     lower.tail = FALSE)
+lm.mod
+```
+
+### Regression Line
+
+$$MaxHR = `r mod$coefficients[[1]]` + `r mod$coefficients[[2]]` * Age$$
+
+### Significance
+
+* $H_O$: There is no significant relationship between MaxHR and Age.
+* $H_A$: There is a significant relationship between MaxHR and Age.
+
+Because our p value of `r p[[1]]` is so low, we reject the null hypothesis and conclude there is a statistically significant relationship between MaxHR and Age. 
+
+We can see from the $R^{2}$ value that about `r round(summary(mod)$r.squared * 100, 2)`% of the data's variability can be reduced by using a linear model predicting MaxHR via Age.
+
+### Plot
+
+```{r}
+plot(df, type = 'p', col = 'blue', main="Effect of Age on Max Heart Rate")
+abline(mod, col ='red')
+```
+
+## Case 2
 
 ```{r}
 url <- 'https://raw.githubusercontent.com/wwells/CUNY_DATA_605/master/Week05/auto-mpg.data'
 auto <- read.table(url)
 names(auto) <- c('displacement', 'horsepower', 'weight', 'acceleration', 'mpg')
-
-A <- as.matrix(auto[,1:4])
-A <- cbind(1, A) # add col for intercept
-b <- as.matrix(auto[,5])
-
-leastsquares <- function(A,b) {
-    M1 <- t(A) %*% A
-    M2 <- t(A) %*% b
-    xhat <- solve(M1, M2)
-    xhat
-}
-
-xhat <- leastsquares(A,b)
-xhat
-lm(mpg ~ ., auto)
 ```
 
-Using the Auto data set from Assignment 5 (also attached here) perform a Linear Regression analysis using mpg as the dependent variable and the other 4 (displacement, horse-power, weight, acceleration) as independent variables. What is the final linear regression fit equation? Which of the 4 independent variables have a significant impact on mpg? What are their corresponding significance levels? What are the standard errors on each of the coefficients? 
+Using the Auto data set from Assignment 5 perform a Linear Regression analysis using mpg as the dependent variable and the other 4 (displacement, horse-power, weight, acceleration) as independent variables. What is the final linear regression fit equation? Which of the 4 independent variables have a significant impact on mpg? What are their corresponding significance levels? What are the standard errors on each of the coefficients? 
 
 Please perform this experiment in two ways. First take any random 40 data points from the entire auto data sample and perform the linear regression fit and measure the 95% confidence intervals. Then, take the entire data set (all 392 points) and perform linear regression and measure the 95% confidence intervals. Please report the resulting fit equation, their significance values and confidence intervals for each of the two runs.
 
-Please submit an R-markdown file documenting your experiments. Your submission should include the final linear fits, and their corresponding significance levels. In addition, you should clearly state what you concluded from looking at the fit and their significance levels.
+### Sample
+
+```{r}
+set.seed(2001)
+samp <- auto[sample(nrow(auto), 40), ]
+sampmod <- lm(mpg ~ ., samp)
+sampCI <- confint(sampmod)
+lm.sampmod <- summary(sampmod)
+sampSig <- lm.sampmod$coefficients[, "Pr(>|t|)"]
+lm.sampmod
+```
+
+### Full Model
+
+```{r}
+fullmod <- lm(mpg ~ ., auto)
+fullCI <- confint(fullmod)
+lm.fullmod <- summary(fullmod)
+fullSig <- lm.fullmod$coefficients[, "Pr(>|t|)"]
+lm.fullmod
+```
+
+#### Compare: Regression Line
+
+__Sample__
+
+$$mpg = `r sampmod$coefficients[[1]]` + `r sampmod$coefficients[[2]]` * displacement + `r sampmod$coefficients[[3]]` * horsepower + `r sampmod$coefficients[[4]]` * weight + `r sampmod$coefficients[[5]]` * acceleration$$
+
+
+__Full Model__
+
+$$mpg = `r fullmod$coefficients[[1]]` + `r fullmod$coefficients[[2]]` * displacement + `r fullmod$coefficients[[3]]` * horsepower + `r fullmod$coefficients[[4]]` * weight + `r fullmod$coefficients[[5]]` * acceleration$$
+
+
+#### Compare:  Significance Levels
+
+```{r}
+Sig <- data.frame(fullSig, sampSig)
+knitr::kable(Sig)
+```
+
+We can see from the table above (and the summaries of each of the models), that in our sample, none of the independent variables are statistically significant.   In our full model, weight and horsepower are significant, while acceleration and displacement are not significant in predicting mpg. 
+
+#### Compare:  Confidence Intervals
+
+```{r}
+CI <- data.frame(fullCI, sampCI)
+names(CI) <- c("Full_2.5%", "Full_97.5%", "Samp_2.5%", "Samp_97.5%")
+knitr::kable(CI)
+```
+
+Here we also see a considerably narrower confidence interval for our full dataset.   Our sample CIs are considerably larger.  
+
+We can also briefly attempt to strip away the insignificant variables from our regression model and see if they improve predictive performance.
+
+```{r}
+adjmod <- lm(mpg ~ weight + horsepower, auto)
+summary(adjmod)
+```
+
+From this we can see that our $R^{2}$ are pretty similar.   By removing acceleration and displacement from our model, we haven't really removed any more variability.
+
+#### Exploratory Plots:  Full Data
+
+```{r}
+plot(auto)
+par(mfrow=c(2,2), oma=c(0,0,2,0))
+termplot(fullmod, partial.resid=TRUE)
+title("Residuals for Each Predictor", outer=TRUE)
+```
 
 ### References:
+
+* https://github.com/wwells/CUNY_DATA_606/tree/master/Labs/Lab8
+* http://www.clayford.net/statistics/tag/termplot/
+* https://stat.ethz.ch/R-manual/R-devel/library/stats/html/confint.html
+* https://courses.washington.edu/b515/l6.pdf
 
 
