@@ -45,20 +45,67 @@ names(auto) <- c('displacement', 'horsepower', 'weight', 'acceleration', 'mpg')
 ```
 
 
-### Init
+### Poly Function
 
 ```{r}
-polyfitter <- function(maxpoly){
+# takes desired max polynomial degrees and number of cross validation sims
+# fits model for each polynomial degree up to the max
+# then creates a table of fit errors for number of cross validations sims
+# we can later take the mean of these columns to understand bias/variance tradeoffs
+polyfitter <- function(maxpoly, nsim){
     range <- seq(1,maxpoly)
+    header <- ''
     cv.err <- ''
     for (i in range){
+        # fit model for particular polynomial
         glm.fit <- glm(mpg~poly(displacement+horsepower+weight+acceleration,i), data=auto)
-        cv.err[i] <- cv.glm(auto, glm.fit, K=5)$delta[1]
+        x <- ''
+        
+        # do several cross validations
+        for (n in 1:nsim) {
+            x[n] <- as.numeric(cv.glm(auto, glm.fit, K=5)$delta[1])
+        }
+        x <- as.numeric(x)
+        cv.err <- data.frame(cv.err, x)
+        header <- c(header, paste0('Poly_', i))
     }
+    cv.err <- cv.err[, -1]
+    names(cv.err) <- header[-1]
     return(cv.err)
 }
-
-fit8 <- polyfitter(8)
-degree <- 1:8
-plot(degree,fit8,type='b')
 ```
+
+### Run function, get fit means
+
+```{r}
+# number of times cross validate each poly fit
+n <- 100
+# max degree of polynomial to model
+p <- 11
+
+Poly8 <- polyfitter(p, n)
+m.Poly8 <- colMeans(Poly8)
+```
+
+### Plot
+
+```{r}
+title <- paste0('GLM Model Fit Means, ', n, ' Samples')
+
+degrees <- 1:p
+plot(degrees, m.Poly8, type='b', ylab='E_MSE', xlab='Polynomial Degree', main=title, col='blue')
+
+```
+
+### Summary
+
+We can see that the best balance of bias/variance tradeoff for a GLM model is around Polynomial Degree 2 or 3.   First degree introduces too much bias, via underfit.   Later degrees overfit.  Creating a GLM model of polynomial degree 2 or 3 is all the complexity we need to model MPG in the Auto dataset.  
+
+```{r}
+m.Poly8
+```
+
+### References
+
+* http://www.milanor.net/blog/cross-validation-for-predictive-analytics-using-r/
+* https://lagunita.stanford.edu/c4x/HumanitiesScience/StatLearning/asset/cv_boot.pdf
