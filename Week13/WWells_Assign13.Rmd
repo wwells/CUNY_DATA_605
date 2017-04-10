@@ -44,9 +44,12 @@ Please solve these problems analytically (i.e. by working out the math) and subm
 ### Use integration by parts to solve for $\int sin(x)cos(x) dx$
 
 $$\int f(x) g'(x) dx = f(x) g(x) - \int f'(x) g(x) dx$$
+
 $$f(x) = cos(x); f'(x) = -sin(x); g'(x) = -sin(x); g(x) = cos(x)$$
 $$\int -sin(x)cos(x) dx = cos^{2}x - \int -sin(x)cos(x) dx$$ 
+
 $$-2\int sin(x)cos(x) dx = cos^{2}x$$ 
+
 $$\int sin(x)cos(x) dx = -\frac{1}{2} cos^2(x) + C$$
 
 ### Use integration by parts to solve for $\int x^2e^x dx$
@@ -63,8 +66,11 @@ Integration by Parts #2
 $$f(x) = x; f'(x) = 1; g'(x) = e^x; g(x) = e^x$$
  
 $$\int xe^x dx = xe^x - \int e^x dx$$ 
+
 $$\int xe^x dx = xe^x - (e^x + C)$$ 
+
 Substitute Results of Part 2 
+
 $$\int x^2e^x dx = x^2e^x - 2(xe^x - (e^x + C))$$ 
 
 ### What is $\frac{d}{dx} (x cos(x))$?
