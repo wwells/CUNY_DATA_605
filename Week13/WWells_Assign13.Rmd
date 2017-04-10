@@ -1,0 +1,80 @@
+---
+title: "DATA 605: Fundamentals of Computational Mathematics"
+author: "Walt Wells, Spring 2017"
+subtitle: "Assignment 13"
+output:
+  html_document:
+    css: ../custom.css
+    highlight: zenburn
+    theme: lumen
+---
+# Numerical Integration and Differentiation
+
+## Write Programs
+
+Write a program to compute the derivative of $f(x) = x^3 + 2x^2$ at any value of x. Your function should take in a value of x and return back an approximation to the derivative of f(x) evaluated at that value. You should not use the analytical form of the derivative to compute it. Instead, you should compute this approximation using limits.
+
+```{r}
+myDerivative <- function(x) {
+    f <- function(x) { 
+        x^3 + 2*x^2
+        }
+    h <- 1 * 10^-6
+    val <- (f(x + h) - f(x)) / h
+    round(val,2)
+}
+
+myDerivative(4)
+myDerivative(5)
+myDerivative(10)
+```
+
+Now, write a program to compute the area under the curve for the function $3x^2+4x$ in the range x = [1, 3]. You should first split the range into many small intervals using some really small $\Delta{x}$ value (say 1e-6) and then compute the approximation to the area under the curve.
+
+```{r}
+xlist <- seq(1, 3, by=1e-6)
+area <- round(sum((function (x) 3*x^2 + 4*x)(xlist)) * 1e-6, 2)
+area
+```
+
+## Solve Analytically
+
+Please solve these problems analytically (i.e. by working out the math) and submit your answers.
+
+### Use integration by parts to solve for $\int sin(x)cos(x) dx$
+
+$$\int f(x) g'(x) dx = f(x) g(x) - \int f'(x) g(x) dx$$
+$$f(x) = cos(x); f'(x) = -sin(x); g'(x) = -sin(x); g(x) = cos(x)$$
+$$\int -sin(x)cos(x) dx = cos^{2}x - \int -sin(x)cos(x) dx$$ 
+$$-2\int sin(x)cos(x) dx = cos^{2}x$$ 
+$$\int sin(x)cos(x) dx = -\frac{1}{2} cos^2(x) + C$$
+
+### Use integration by parts to solve for $\int x^2e^x dx$
+
+$$\int f(x) g'(x) dx = f(x) g(x) - \int f'(x) g(x) dx$$
+
+Integration by Parts #1
+
+$$f(x) = x^2; f'(x) = 2x; g'(x) = e^x; g(x) = e^x$$
+$$\int x^2e^x dx = x^2e^x - 2\int xe^x dx$$ 
+
+Integration by Parts #2
+
+$$f(x) = x; f'(x) = 1; g'(x) = e^x; g(x) = e^x$$
+ 
+$$\int xe^x dx = xe^x - \int e^x dx$$ 
+$$\int xe^x dx = xe^x - (e^x + C)$$ 
+Substitute Results of Part 2 
+$$\int x^2e^x dx = x^2e^x - 2(xe^x - (e^x + C))$$ 
+
+### What is $\frac{d}{dx} (x cos(x))$?
+
+$$\frac{d}{dx}(xcos(x)) = cos(x)(1) + x(-sin(x))$$ 
+
+$$\frac{d}{dx}(xcos(x)) = cos(x) - xsin(x)$$
+
+### What is $\frac{d}{dx} e^{x^4}$?
+
+$$\frac{d}{dx}(e^{x^{4}}) = e^{x^{4}}(\frac{d}{dx}(x^{4}))$$ 
+
+$$\frac{d}{dx}(e^{x^4}) = e^{x^4}4x^3$$
