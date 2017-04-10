@@ -60,6 +60,7 @@ $$\int f(x) g'(x) dx = f(x) g(x) - \int f'(x) g(x) dx$$
 Integration by Parts #1
 
 $$f(x) = x^2; f'(x) = 2x; g'(x) = e^x; g(x) = e^x$$
+
 $$\int x^2e^x dx = x^2e^x - 2\int xe^x dx$$ 
 
 Integration by Parts #2
