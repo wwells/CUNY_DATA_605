@@ -46,6 +46,7 @@ Please solve these problems analytically (i.e. by working out the math) and subm
 $$\int f(x) g'(x) dx = f(x) g(x) - \int f'(x) g(x) dx$$
 
 $$f(x) = cos(x); f'(x) = -sin(x); g'(x) = -sin(x); g(x) = cos(x)$$
+
 $$\int -sin(x)cos(x) dx = cos^{2}x - \int -sin(x)cos(x) dx$$ 
 
 $$-2\int sin(x)cos(x) dx = cos^{2}x$$ 
