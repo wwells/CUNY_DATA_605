@@ -1,0 +1,31 @@
+---
+title: "DATA 605: Fundamentals of Computational Mathematics"
+author: "Walt Wells, Spring 2017"
+subtitle: "Assignment 14"
+output:
+  html_document:
+    css: ../custom.css
+    highlight: zenburn
+    theme: lumen
+---
+# Taylor Series
+
+This week, we'll work out some Taylor Series expansions of popular functions.  For each function, only consider its valid ranges as indicated in the notes when you are computing the Taylor Series expansion. 
+
+## $f(x) = \frac{1}{(1-x)}$
+
+$$ f(x) = \frac{1}{1-x} = \sum_{n=0}^{\infty} x^n$$
+
+$$ f(x) = 1 + x + x^2 + x^3 + x^4 + O(x^5)$$
+
+## $f(x) = e^x$
+
+$$ f(x) = e^x = \sum_{n=0}^{\infty} \frac{x^n}{n!} $$
+
+$$ f(x) = 1 + x + \frac{x^2}{2} + \frac{x^3}{6} + \frac{x^4}{24} + O(x^5)$$
+
+## $f(x) = ln(1 + x)$
+
+$$ f(x) = ln(1 + x) = \sum_{n=0}^{\infty} (-1)^{n+1}\frac{x^n}{n}$$
+
+$$ f(x) = x - \frac{x^2}{2} + \frac{x^3}{3} - \frac{x^4}{4} + O(x^5)$$
