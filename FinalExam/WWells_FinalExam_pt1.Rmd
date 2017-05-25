@@ -1,0 +1,217 @@
+---
+title: "DATA 605: Fundamentals of Computational Mathematics"
+author: "Walt Wells, Spring 2017"
+subtitle: "Final Exam - Part 1"
+output:
+  html_document:
+    css: ../custom.css
+    highlight: zenburn
+    theme: lumen
+---
+# Kaggle - House Prices: Advanced Regression Techniques - Part 1
+
+This Final Exam/Project relies on the Kaggle.com [House Prices: Advanced Regression Techniques competition](https://www.kaggle.com/c/house-prices-advanced-regression-techniques). 
+
+In part one we will demonstrate acumen by completing some requested calculations.   In part two we will create a regression model and submit to the Kaggle competition. 
+
+## Environment Prep
+
+```{r, warning=FALSE, message=FALSE}
+if (!require('ggplot2')) install.packages('ggplot2')
+if (!require('gridExtra')) install.packages('gridExtra')
+if (!require('car')) install.packages('car')
+if (!require('MASS')) install.packages('MASS')
+```
+
+## Data Prep
+
+```{r}
+train <- read.csv('train.csv', stringsAsFactors = FALSE)
+test <- read.csv('test.csv', stringsAsFactors = FALSE)
+#summary(train)
+```
+
+## Setup Variables
+
+_Pick one of the quantitative independent variables from the training data set (train.csv), and define that variable as X.   Pick SalePrice as the dependent variable, and define it as Y for the next analysis._   
+
+```{r}
+X <- train$GrLivArea
+Y <- train$SalePrice
+df <- data.frame(X,Y)
+```
+
+## Probability
+
+_Calculate as a minimum the below probabilities a through c.  Assume the small letter "x" is estimated as the 4th quartile of the X variable, and the small letter "y" is estimated as the 2d quartile of the Y variable.  Interpret the meaning of all probabilities._
+
+There seems to be some [difference](https://math.stackexchange.com/questions/1419609/are-there-3-or-4-quartiles-99-or-100-percentiles) in [statistics](https://en.wikipedia.org/wiki/Quartile) as to the meaning of quartile, describing different things (are there 3 or 4, etc). 
+
+Choosing the 4th quartile as x and then asking for X>x is interesting, as 4th quartile represents the 100th percentile.   There are no Xs greater than the 4th quartile.   
+
+As a result, instead of returning a bunch of 0s, in the code below, I will choose to interpret this question by giving x as the lower boundary of the top quarter of the data (sometimes called the 3rd quartile or 75% mark), making the y the 2nd quartile (or 25% mark)
+
+```{r}
+# x = 4th quantile of df$X
+x <- quantile(df$X, .75)
+#x <- quantile(df$X, .5) # test a different split
+#x <- quantile(df$X, 1) # test with what i would normally interpret as 4th quartile
+
+# y = 2nd quartile of df$Y
+y <- quantile(df$Y, .25)
+#y <- quantile(df$Y, .5) # test a different split
+```
+
+### a.	P(X>x | Y>y)
+
+```{r}
+all <- length(df$X)
+
+#get P(Y>y)
+Yy<- df[df$Y > y,]
+pY <- round(nrow(Yy) / all, 4)
+
+#get P(X>x) for later
+Xx <- df[df$X > x, ]
+pX <- round(nrow(Xx) / all, 3)
+
+#get P(Y>y|X>x) for later
+YygXx <- Xx[Xx$Y > y,]
+pYgX <- round(nrow(YygXx) / all, 3)
+
+#get P(X>x | Y>y)
+XxgYy <- Yy[Yy$X > x,]
+pXgY <- round(nrow(XxgYy) / all, 4)
+print(paste0("P(X > x | Y > y) = ", pXgY))
+```
+
+### b.  P(X>x, Y>y)	
+
+```{r}
+pXY <- round(pX * pY, 3)
+print(paste0("P(X > x, Y > y) = ", pXY))
+```
+
+### c.  P(X<x | Y>y)	
+
+```{r}
+XlxgYy <- Yy[Yy$X < x,]
+plXgY <- round(nrow(XlxgYy) / all, 3)
+print(paste0("P(X < x | Y > y) = ", plXgY))
+```
+
+_Does splitting the training data in this fashion make them independent? In other words, does P(X|Y)=P(X)P(Y))?   Check mathematically, and then evaluate by running a Chi Square test for association.  You might have to research this._ 
+
+```{r}
+### Are these independant?
+print(paste0("Is P(Y > y | X > x) == P(Y > y) * P(X > x): ", pYgX == pX * pY))
+print(paste0("Is P(X > x | Y > y) == P(Y > y) * P(X > x): ", pXgY == pX * pY))
+
+chisq.test(XxgYy)
+chisq.test(df)
+```
+
+Since the p value is so low, we reject the null hypothesis that the data are independant. All signs suggest that regardless of these two variables are split along different quartiles, they are dependant.  In the code block where 'x' and 'y' are defined, we can chose different splits and still confirm the overall results.  
+
+The double check using the full df suggests the same result, regardless of how the data is split.  These two variables are dependent.
+
+## Descriptive and Inferential Statistics 
+
+_Provide univariate descriptive statistics and appropriate plots for both variables.   Provide a scatterplot of X and Y.  Transform both variables simultaneously using Box-Cox transformations.  You might have to research this._
+
+### Summary and Exploratory Plots
+
+```{r}
+#Provide univariate descriptive statistics and appropriate plots. 
+summary(df)
+
+xbox <- ggplot(df, aes("X", X)) + geom_boxplot() + ggtitle("X = GrLivArea")
+ybox <- ggplot(df, aes("Y", Y)) + geom_boxplot() + ggtitle("Y = SalesPrice")
+grid.arrange(xbox, ybox, ncol=2)
+
+#Provide a scatterplot of the two variables.  
+ggplot(df, aes(X,Y)) + geom_point() + xlab("X = GrLivArea") + ylab("Y = SalesPrice") 
+```
+
+### Box Cox Transformation
+
+```{r}
+#let's look at their normalcy:
+ggplot(df, aes(1:length(df$Y), df[order(Y),]$Y)) + geom_point() + 
+    xlab("index") + ylab("SalePrice (Y)")
+qqnorm(df$Y)
+qqline(df$Y)
+
+ggplot(df, aes(1:length(df$X), df[order(X),]$X)) + geom_point() + 
+    xlab("index") + ylab("GrLivArea (X)")
+qqnorm(df$X)
+qqline(df$X)
+
+
+# transform the dependant variable
+boxC <- boxCox(df$Y ~ df$X, plotit = TRUE)
+
+# get our Ylambda from graph
+Ylambda <- 0.1
+Y.transformed <- yjPower(df$Y, Ylambda)
+qqnorm(Y.transformed)
+qqline(Y.transformed)
+
+boxTidwell(Y.transformed ~ df$X)
+Xlambda <- 0.05
+X.transformed <- yjPower(df$X, Xlambda)
+qqnorm(X.transformed)
+qqline(X.transformed)
+
+df.Trans <- data.frame(X.transformed, Y.transformed)
+```
+
+### Correlation Analysis and Hypothesis Testing
+
+_Using the transformed variables, run a correlation analysis and interpret.  Test the hypothesis that the correlation between these variables is 0 and provide a 99% confidence interval.  Discuss the meaning of your analysis._
+
+```{r}
+cor.test(df.Trans$X.transformed, df.Trans$Y.transformed, conf.level=0.99)
+cor.test(df$X, df$Y, conf.level=0.99)
+```
+
+Transforming our variables using BoxCox methods, slightly improved the correlation estimate.   We also tested the original, untransformed data to be sure.  The p value in both cases is very low, causing us to reject the null hypothesis that there is 0 correlation.    
+
+In the transformed data, we are 99% confident that the data correlation coefficient is between 0.6975 and 0.7605.  
+
+## Linear Algebra and Correlation  
+
+_Invert your correlation matrix. (This is known as the precision matrix and contains variance inflation factors on the diagonal.) Multiply the correlation matrix by the precision matrix, and then multiply the precision matrix by the correlation matrix._
+
+```{r}
+CorMatrix <- cor(df)
+CorMatrix
+
+InvMatrix <- solve(CorMatrix)
+InvMatrix
+
+CorMatrix %*% InvMatrix
+InvMatrix %*% CorMatrix
+```
+
+## Calculus-Based Probability & Statistics 
+
+_Many times, it makes sense to fit a closed form distribution to data.  For your non-transformed independent variable, location shift it so that the minimum value is above zero.  Then load the MASS package and run fitdistr to fit a density function of your choice.  (See  https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/fitdistr.html )._  
+
+_Find the optimal value of the parameters for this distribution, and then take 1000 samples from this distribution (e.g., rexp(1000, ) for an exponential).  Plot a histogram and compare it with a histogram of your non-transformed original variable._  
+
+```{r}
+distr <- fitdistr(df$X, densfun="exponential")
+
+l <- distr$estimate
+xsamp <- rexp(1000,l)
+
+samphist <- qplot(xsamp, geom='histogram', binwidth=250) + xlab("Sampled")
+orighist <- qplot(df$X, geom='histogram', binwidth=100) + xlab("Original")
+grid.arrange(samphist, orighist, ncol=2)
+```
+
+## References
+
+* https://github.com/wwells/CUNYBridge_Math/blob/master/waltwellsFinalProject_datascimath.Rmd
+* https://stats.stackexchange.com/questions/61217/transforming-variables-for-multiple-regression-in-r
